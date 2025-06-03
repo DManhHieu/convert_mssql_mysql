@@ -24,6 +24,7 @@ public class SqlConverter {
         result = result.replaceAll("(?i)NVARCHAR", "VARCHAR");
         result = result.replaceAll("(?i)DATETIME2", "DATETIME");
         result = result.replaceAll("(?i)BIT", "TINYINT(1)");
+        result = result.replaceAll("(?i)\\bLEN\\s*\\(", "CHAR_LENGTH(");
         return result;
     }
 
