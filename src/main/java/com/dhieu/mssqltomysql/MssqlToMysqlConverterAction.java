@@ -5,10 +5,14 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 
 public class MssqlToMysqlConverterAction extends AnAction {
     @Override
@@ -28,13 +32,24 @@ public class MssqlToMysqlConverterAction extends AnAction {
 
         CommandProcessor.getInstance().executeCommand(project, () -> {
             ApplicationManager.getApplication().runWriteAction(() -> {
-                editor.getDocument().replaceString(
-                    selectionModel.getSelectionStart(),
-                    selectionModel.getSelectionEnd(),
-                    converted
-                );
+                Document document = editor.getDocument();
+                int start = selectionModel.getSelectionStart();
+                int end = selectionModel.getSelectionEnd();
+
+                document.replaceString(start, end, converted);
                 selectionModel.removeSelection();
+
+                if (project != null) {
+                    PsiDocumentManager psiManager = PsiDocumentManager.getInstance(project);
+                    psiManager.commitDocument(document);
+
+                    PsiFile psiFile = psiManager.getPsiFile(document);
+                    if (psiFile != null) {
+                        CodeStyleManager.getInstance(project).reformatText(psiFile, start, start + converted.length());
+                    }
+                }
             });
-        }, "Convert MSSQL to MySQL", null); // "Convert..." is the undo label
+        }, "Convert MSSQL to MySQL", null);
+
     }
 }
