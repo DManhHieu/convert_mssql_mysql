@@ -6,13 +6,29 @@ import java.util.regex.Pattern;
 public class SqlConverter {
     public static String convertMssqlToMysql(String mssqlQuery) {
         String result = mssqlQuery;
+        result = replaceType(result);
+        result = replaceSelectTop(result);
+        result = replaceDBO(result.trim());
+        result = convertBackquoteToSnakeCase(result);
+        result = convertBracketsToSnakeCase(result);
+        result = convertAliasShowcase(result);
+        result = convertTableColumn(result);
+        return result;
+    }
+
+    private static String replaceType(String sql) {
+        String result = sql;
         result = result.replaceAll("(?i)GETDATE\\s*\\(\\)", "NOW()");
         result = result.replaceAll("(?i)ISNULL\\s*\\(", "IFNULL(");
         result = result.replaceAll("\\[([^\\]]+)\\]", "`$1`");
         result = result.replaceAll("(?i)NVARCHAR", "VARCHAR");
-        result = result.replaceAll("(?i)SELECT\\s+TOP\\s*\\(\\s*100\\s*\\)\\s*PERCENT", "SELECT");
+        result = result.replaceAll("(?i)DATETIME2", "DATETIME");
+        result = result.replaceAll("(?i)BIT", "TINYINT(1)");
+        return result;
+    }
 
-
+    private static String replaceSelectTop(String sql) {
+        String result = sql;
         Pattern topPattern = Pattern.compile("(?i)SELECT\\s+TOP\\s+(\\d+)\\s", Pattern.CASE_INSENSITIVE);
         Matcher matcher = topPattern.matcher(result);
         if (matcher.find()) {
@@ -21,12 +37,32 @@ public class SqlConverter {
             result = result.replaceAll("(?i);?$", " LIMIT " + topN + ";");
         }
 
-        result = result.replaceAll("(?i)DATETIME2", "DATETIME");
-        result = result.replaceAll("(?i)BIT", "TINYINT(1)");
-        result = replaceDBO(result.trim());
-        result = convertBackquoteToSnakeCase(result);
-        result = convertBracketsToSnakeCase(result);
-        return result;
+        return result.replaceAll("(?i)SELECT\\s+TOP\\s*\\(\\s*100\\s*\\)\\s*PERCENT", "SELECT");
+    }
+
+    private static String convertAliasShowcase(String sql) {
+        Pattern aliasPattern = Pattern.compile("(?i)\\s+AS\\s+(\\w+)");
+        Matcher aliasMatcher = aliasPattern.matcher(sql);
+        StringBuilder sb = new StringBuilder();
+        while (aliasMatcher.find()) {
+            String alias = aliasMatcher.group(1).toLowerCase();
+            aliasMatcher.appendReplacement(sb, " AS " + alias);
+        }
+        aliasMatcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    private static String convertTableColumn(String sql) {
+        Pattern dotPattern = Pattern.compile("(\\w+)\\.(\\w+)");
+        Matcher dotMatcher = dotPattern.matcher(sql);
+        StringBuilder sb = new StringBuilder();
+        while (dotMatcher.find()) {
+            String table = dotMatcher.group(1).toLowerCase();
+            String column = dotMatcher.group(2).toLowerCase();
+            dotMatcher.appendReplacement(sb, table + "." + column);
+        }
+        dotMatcher.appendTail(sb);
+        return sb.toString();
     }
 
     private static String replaceDBO(String sql) {
@@ -43,7 +79,6 @@ public class SqlConverter {
         Pattern pattern = Pattern.compile("`(.*?)`");
         return convertToSnakeCase(sql, pattern);
     }
-
     private static String convertToSnakeCase(String sql, Pattern pattern) {
         Matcher matcher = pattern.matcher(sql);
         StringBuilder result = new StringBuilder();
