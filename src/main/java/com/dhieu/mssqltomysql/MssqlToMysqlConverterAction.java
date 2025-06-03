@@ -30,26 +30,24 @@ public class MssqlToMysqlConverterAction extends AnAction {
 
         String converted = SqlConverter.convertMssqlToMysql(selectedText);
 
-        CommandProcessor.getInstance().executeCommand(project, () -> {
-            ApplicationManager.getApplication().runWriteAction(() -> {
-                Document document = editor.getDocument();
-                int start = selectionModel.getSelectionStart();
-                int end = selectionModel.getSelectionEnd();
+        CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
+            Document document = editor.getDocument();
+            int start = selectionModel.getSelectionStart();
+            int end = selectionModel.getSelectionEnd();
 
-                document.replaceString(start, end, converted);
-                selectionModel.removeSelection();
+            document.replaceString(start, end, converted);
+            selectionModel.removeSelection();
 
-                if (project != null) {
-                    PsiDocumentManager psiManager = PsiDocumentManager.getInstance(project);
-                    psiManager.commitDocument(document);
+            if (project != null) {
+                PsiDocumentManager psiManager = PsiDocumentManager.getInstance(project);
+                psiManager.commitDocument(document);
 
-                    PsiFile psiFile = psiManager.getPsiFile(document);
-                    if (psiFile != null) {
-                        CodeStyleManager.getInstance(project).reformatText(psiFile, start, start + converted.length());
-                    }
+                PsiFile psiFile = psiManager.getPsiFile(document);
+                if (psiFile != null) {
+                    CodeStyleManager.getInstance(project).reformatText(psiFile, start, start + converted.length());
                 }
-            });
-        }, "Convert MSSQL to MySQL", null);
+            }
+        }), "Convert MSSQL to MySQL", null);
 
     }
 }
