@@ -1,0 +1,17 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.dhieu.mssqlToMysql</id>
+    <idea-version since-build="251" until-build="251.*"/>
+    <vendor>DHieu</vendor>
+    <extensions defaultExtensionNs="com.intellij">
+
+    </extensions>
+    <actions>
+        <action id="ConvertMssqlToMysql"
+                class="com.dhieu.mssqltomysql.MssqlToMysqlConverterAction"
+                text="Convert MSSQL to MySQL"
+                description="Convert MSSQL SQL code to MySQL syntax">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
