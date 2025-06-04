@@ -1,9 +1,24 @@
 package com.dhieu.mssqltomysql;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SqlConverter {
+
+    private static final String[] SQL_KEYWORDS = {
+        "SELECT", "FROM", "WHERE", "AS", "AND", "OR", "ON", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER",
+        "GROUP", "BY", "HAVING", "ORDER", "DESC", "ASC", "TOP", "DISTINCT", "CASE", "WHEN", "THEN",
+        "ELSE", "END", "IN", "IS", "NULL", "NOT", "BETWEEN", "LIKE", "EXISTS", "UNION", "ALL", "LIMIT"
+    };
+
+    private static final Pattern WORD_PATTERN = Pattern.compile("\\b(?!\\d)\\w+\\b");
+
+    private static final Pattern QUOTED = Pattern.compile("(\\[[^\\]]+\\]|\"[^\"]+\")");
+
+    private static final Pattern CAMEL_CASE = Pattern.compile("(?<=[a-z])(?=[A-Z])");
+
     public static String convertMssqlToMysql(String mssqlQuery) {
         String result = mssqlQuery;
         result = replaceType(result);
@@ -14,6 +29,7 @@ public class SqlConverter {
         result = convertAliasShowcase(result);
         result = convertTableColumn(result);
         result = convertEomonth(result);
+        result = convertAllIdentifiersToSnakeCase(result);
         return result;
     }
 
@@ -101,6 +117,52 @@ public class SqlConverter {
             .replaceAll("([a-z])([A-Z])", "$1_$2")   // camelCase → snake_case
             .replaceAll("[^a-zA-Z0-9_]", "")         // remove non-alphanumerics
             .toLowerCase();
+    }
+    public static String convertAllIdentifiersToSnakeCase(String sql) {
+        Set<String> keywords = new HashSet<>();
+        for (String kw : SQL_KEYWORDS) {
+            keywords.add(kw.toUpperCase());
+        }
+
+        StringBuilder result = new StringBuilder();
+        Matcher quotedMatcher = QUOTED.matcher(sql);
+
+        int lastEnd = 0;
+        while (quotedMatcher.find()) {
+            // Convert non-quoted part
+            String before = sql.substring(lastEnd, quotedMatcher.start());
+            result.append(convertUnquotedPart(before, keywords));
+
+            // Append quoted part as-is
+            result.append(quotedMatcher.group());
+            lastEnd = quotedMatcher.end();
+        }
+
+        // Convert the tail (after last quote)
+        result.append(convertUnquotedPart(sql.substring(lastEnd), keywords));
+
+        return result.toString();
+    }
+
+    private static String convertUnquotedPart(String input, Set<String> keywords) {
+        Matcher wordMatcher = WORD_PATTERN.matcher(input);
+        StringBuilder buffer = new StringBuilder();
+
+        while (wordMatcher.find()) {
+            String word = wordMatcher.group();
+            if (keywords.contains(word.toUpperCase())) {
+                wordMatcher.appendReplacement(buffer, word); // keep keyword
+            } else {
+                String snake = toSnakeCase(word);
+                wordMatcher.appendReplacement(buffer, snake);
+            }
+        }
+        wordMatcher.appendTail(buffer);
+        return buffer.toString();
+    }
+
+    private static String camelCaseToSnakeCase(String word) {
+        return CAMEL_CASE.matcher(word).replaceAll("_").toLowerCase();
     }
 
     private static String convertEomonth(String sql) {
