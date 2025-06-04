@@ -13,6 +13,7 @@ public class SqlConverter {
         result = convertBracketsToSnakeCase(result);
         result = convertAliasShowcase(result);
         result = convertTableColumn(result);
+        result = convertEomonth(result);
         return result;
     }
 
@@ -100,5 +101,16 @@ public class SqlConverter {
             .replaceAll("([a-z])([A-Z])", "$1_$2")   // camelCase → snake_case
             .replaceAll("[^a-zA-Z0-9_]", "")         // remove non-alphanumerics
             .toLowerCase();
+    }
+
+    private static String convertEomonth(String sql) {
+        // Replace EOMONTH(date) → LAST_DAY(date)
+        sql = sql.replaceAll("(?i)EOMONTH\\s*\\(([^,\\)]+)\\)", "LAST_DAY($1)");
+
+        // Replace EOMONTH(date, offset) → LAST_DAY(DATE_ADD(date, INTERVAL offset MONTH))
+        sql = sql.replaceAll("(?i)EOMONTH\\s*\\(([^,\\)]+)\\s*,\\s*([^\\)]+)\\)",
+            "LAST_DAY(DATE_ADD($1, INTERVAL $2 MONTH))");
+
+        return sql;
     }
 }
