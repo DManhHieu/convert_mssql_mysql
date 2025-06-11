@@ -1,4 +1,4 @@
-package com.dhieu.mssqltomysql;
+package com.dhieu.converter.converter;
 
 import java.util.HashSet;
 import java.util.Set;

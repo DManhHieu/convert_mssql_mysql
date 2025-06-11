@@ -1,5 +1,6 @@
-package com.dhieu.mssqltomysql;
+package com.dhieu.converter.action;
 
+import com.dhieu.converter.converter.SqlConverter;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;

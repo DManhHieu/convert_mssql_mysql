@@ -8,9 +8,15 @@
     </extensions>
     <actions>
         <action id="ConvertMssqlToMysql"
-                class="com.dhieu.mssqltomysql.MssqlToMysqlConverterAction"
+                class="com.dhieu.converter.action.MssqlToMysqlConverterAction"
                 text="Convert MSSQL to MySQL"
                 description="Convert MSSQL SQL code to MySQL syntax">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        <action id="TypescriptToJavaAction"
+                class="com.dhieu.converter.action.TypescriptToJavaAction"
+                text="Convert Typescript to Java"
+                description="Convert typescript interface to java">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
     </actions>

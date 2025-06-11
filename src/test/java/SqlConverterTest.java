@@ -1,4 +1,4 @@
-import com.dhieu.mssqltomysql.SqlConverter;
+import com.dhieu.converter.converter.SqlConverter;
 import org.junit.Test;
 
 public class SqlConverterTest {
