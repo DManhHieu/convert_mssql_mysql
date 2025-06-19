@@ -29,7 +29,7 @@ public class SqlConverter {
         result = convertAliasShowcase(result);
         result = convertTableColumn(result);
         result = convertEomonth(result);
-        result = convertAllIdentifiersToSnakeCase(result);
+//        result = convertAllIdentifiersToSnakeCase(result);
         return result;
     }
 
